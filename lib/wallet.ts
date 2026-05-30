@@ -74,3 +74,15 @@ export async function signTransaction(
     return null
   }
 }
+
+export async function getFreighterNetworkPassphrase(): Promise<string | null> {
+  const freighter = getFreighter()
+  if (!freighter) return null
+
+  try {
+    const details = await freighter.getNetworkDetails()
+    return details.networkPassphrase
+  } catch {
+    return null
+  }
+}

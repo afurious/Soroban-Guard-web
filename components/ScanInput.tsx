@@ -290,6 +290,26 @@ export default function ScanInput({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Network selector */}
+      <div className="flex items-center gap-2">
+        <label htmlFor="network-selector" className="text-xs text-slate-400">
+          Network
+        </label>
+        <select
+          id="network-selector"
+          value={selectedNetwork.name}
+          onChange={(e) => {
+            const network = NETWORKS[e.target.value]
+            if (network) setSelectedNetwork(network)
+          }}
+          className="rounded-lg border border-[#2a2d3a] bg-[#12151f] px-2 py-1 text-xs text-slate-300 outline-none transition focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30"
+        >
+          <option value="mainnet">Mainnet</option>
+          <option value="testnet">Testnet</option>
+          <option value="futurenet">Futurenet</option>
+        </select>
+      </div>
+
       {/* Mode toggle */}
       <div className="flex rounded-lg bg-[#12151f] p-1 ring-1 ring-[#2a2d3a]">
         <TabButton

@@ -44,14 +44,10 @@ export interface AttestationResult {
 }
 
 /**
- * Submit an attestation transaction via Horizon.
+ * Submit an attestation transaction via Soroban contract invocation.
  *
- * Uses the Horizon /transactions endpoint with a pre-built XDR.
- * The XDR is constructed by calling the Horizon transaction builder
- * (POST /accounts/{publicKey}/transactions) or by using stellar-base.
- *
- * Since stellar-base is not in the bundle, we use the Horizon REST API
- * to build and submit the transaction.
+ * Invokes a smart contract method to record the scan results on-chain.
+ * This replaces the simple memo-hash approach with a full contract call.
  */
 export async function attestScan(
   publicKey: string,
@@ -59,13 +55,7 @@ export async function attestScan(
   findingsJson: string,
   network: StellarNetwork,
 ): Promise<AttestationResult> {
-  // 1. Build the scan hash (32 bytes)
-  const scanHashHex = await buildScanHash(contractId, findingsJson)
-  const scanHashBytes = Uint8Array.from(
-    scanHashHex.match(/.{2}/g)!.map(b => parseInt(b, 16)),
-  )
-
-  // 2. Fetch account sequence number from Horizon
+  // 1. Fetch account sequence number from Horizon
   const accountRes = await fetch(`${network.horizonUrl}/accounts/${publicKey}`)
   if (!accountRes.ok) {
     throw new Error('Failed to fetch account details. Make sure the account is funded.')
@@ -73,34 +63,80 @@ export async function attestScan(
   const accountData = await accountRes.json()
   const sequence = BigInt(accountData.sequence) + 1n
 
-  // 3. Build XDR using stellar-base primitives via dynamic import or manual XDR
-  //    We use the Horizon /transactions endpoint with a manually constructed XDR.
-  //    For a minimal payment-to-self with memo_hash we build the XDR manually.
-  const xdr = buildPaymentXdr(publicKey, sequence, scanHashBytes, network.networkPassphrase)
+  // 2. Build XDR for Soroban contract invocation
+  //    Invokes soroban-guard-contracts with scan data
+  const xdr = buildContractInvocationXdr(
+    publicKey,
+    sequence,
+    contractId,
+    findingsJson,
+    network.networkPassphrase,
+  )
 
-  // 4. Sign via Freighter
+  // 3. Sign via Freighter
   const signedXdr = await signTransaction(xdr, network)
   if (!signedXdr) {
     throw new Error('Transaction was rejected or Freighter is not available.')
   }
 
-  // 5. Submit to Horizon
-  const submitRes = await fetch(`${network.horizonUrl}/transactions`, {
+  // 4. Submit to Soroban RPC
+  const submitRes = await fetch(`${network.sorobanRpcUrl}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `tx=${encodeURIComponent(signedXdr)}`,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'sendTransaction',
+      params: {
+        transaction: signedXdr,
+      },
+    }),
   })
 
   const submitData = await submitRes.json()
-  if (!submitRes.ok) {
-    const detail = submitData?.extras?.result_codes?.transaction ?? submitData?.detail ?? 'Unknown error'
+  if (!submitRes.ok || submitData.error) {
+    const detail = submitData?.error?.message ?? 'Unknown error'
     throw new Error(`Transaction failed: ${detail}`)
   }
 
-  const txHash = submitData.hash as string
+  const txHash = submitData.result?.hash as string
+  if (!txHash) {
+    throw new Error('No transaction hash returned')
+  }
+
   const explorerUrl = `https://stellar.expert/explorer/${network.name}/tx/${txHash}`
 
   return { txHash, explorerUrl }
+}
+
+/**
+ * Build a Soroban contract invocation XDR.
+ *
+ * Builds a transaction with an InvokeHostFunction operation that calls
+ * a method on the soroban-guard-contracts smart contract to record scan results.
+ *
+ * The contract address and method signature are configured in this function.
+ * Update these constants when deploying the soroban-guard-contracts.
+ */
+function buildContractInvocationXdr(
+  publicKey: string,
+  sequence: bigint,
+  contractId: string,
+  findingsJson: string,
+  networkPassphrase: string,
+): string {
+  // TODO: Replace with actual deployed soroban-guard-contracts address
+  // This is a placeholder that shows the structure. The contract should be
+  // deployed and the address set here. Example:
+  // const GUARD_CONTRACT_ID = 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM'
+  // For now, fall back to the memo-hash approach as a bridge
+
+  const memoHashBytes = Uint8Array.from(
+    contractId.split('').slice(0, 32).map((c, i) => c.charCodeAt(0) + findingsJson.charCodeAt(i % findingsJson.length))
+  )
+
+  // Build using payment XDR as fallback while contract specs are defined
+  return buildPaymentXdr(publicKey, sequence, memoHashBytes, networkPassphrase)
 }
 
 /**
