@@ -14,7 +14,7 @@ const STOP_WORDS = new Set([
   'up', 'down', 'while', 'also', 'only', 'same', 'own', 'your', 'their',
 ])
 
-function tokenize(text: string): string[] {
+export function tokenize(text: string): string[] {
   return text
     .toLowerCase()
     .replace(/[^a-z0-9_-]/g, ' ')

@@ -13,7 +13,7 @@ export function isValidNpmPackage(packageName: string): boolean {
   return NPM_PACKAGE_NAME_RE.test(trimmed)
 }
 
-function buildUnpkgPackagePath(packageName: string): string {
+export function buildUnpkgPackagePath(packageName: string): string {
   const trimmed = packageName.trim()
   const scopedMatch = trimmed.match(/^@([^/]+)\/(.+)$/)
 
