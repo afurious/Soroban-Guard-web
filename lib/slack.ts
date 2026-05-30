@@ -8,7 +8,7 @@ const SEVERITY_ORDER: Record<Severity, number> = {
   Info: 4,
 }
 
-function countBySeverity(findings: Finding[]): Record<Severity, number> {
+export function countBySeverity(findings: Finding[]): Record<Severity, number> {
   return findings.reduce<Record<Severity, number>>(
     (counts, finding) => {
       counts[finding.severity] += 1
