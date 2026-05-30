@@ -20,7 +20,7 @@ const PRIORITY_BY_SEVERITY: Record<Severity, number> = {
   Info: 4,
 }
 
-function findingDescription(finding: Finding): string {
+export function findingDescription(finding: Finding): string {
   return [
     `Severity: ${finding.severity}`,
     `Check: ${finding.check_name}`,
