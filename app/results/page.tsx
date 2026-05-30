@@ -69,7 +69,6 @@ export default function ResultsPage() {
 
   const counts: Record<Severity, number> = { Critical: 0, High: 0, Medium: 0, Low: 0, Info: 0,
 }
-  for (const f of findings) counts[f.severity]++
 
   const canCopy = typeof navigator !== 'undefined' && navigator.clipboard
 
