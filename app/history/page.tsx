@@ -1,32 +1,32 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import type { Finding } from '@/types/findings'
-import ConfirmModal from '@/components/ConfirmModal'
-import SeverityTrendChart from '@/components/SeverityTrendChart'
-import ScanHeatmap from '@/components/ScanHeatmap'
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import type { Finding } from "@/types/findings";
+import ConfirmModal from "@/components/ConfirmModal";
+import SeverityTrendChart from "@/components/SeverityTrendChart";
+import ScanHeatmap from "@/components/ScanHeatmap";
 import {
   addSchedule,
   removeSchedule,
   getSchedule,
   type ScheduleInterval,
-} from '@/lib/schedule'
+} from "@/lib/schedule";
 
 interface HistoryEntry {
-  id: string
-  date: string
-  source: string
-  findings: Finding[]
+  id: string;
+  date: string;
+  source: string;
+  findings: Finding[];
 }
 
-const STORAGE_KEY = 'sg_history'
+const STORAGE_KEY = "sg_history";
 
 function loadHistory(): HistoryEntry[] {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
   } catch {
-    return []
+    return [];
   }
 }
 
@@ -36,34 +36,39 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true)
   const [showConfirm, setShowConfirm] = useState(false)
   // Track schedule state per entry id
-  const [schedules, setSchedules] = useState<Record<string, ScheduleInterval | null>>({})
+  const [schedules, setSchedules] = useState<
+    Record<string, ScheduleInterval | null>
+  >({});
 
   useEffect(() => {
-    const loaded = loadHistory()
-    setEntries(loaded)
+    const loaded = loadHistory();
+    setEntries(loaded);
     // Load existing schedules for each entry
-    const initial: Record<string, ScheduleInterval | null> = {}
+    const initial: Record<string, ScheduleInterval | null> = {};
     for (const e of loaded) {
-      const s = getSchedule(e.source, 'testnet')
-      initial[e.id] = s?.interval ?? null
+      const s = getSchedule(e.source, "testnet");
+      initial[e.id] = s?.interval ?? null;
     }
     setSchedules(initial)
     setLoading(false)
   }, [])
 
   function clearHistory() {
-    localStorage.removeItem(STORAGE_KEY)
-    setEntries([])
-    setShowConfirm(false)
+    localStorage.removeItem(STORAGE_KEY);
+    setEntries([]);
+    setShowConfirm(false);
   }
 
-  function handleScheduleChange(entry: HistoryEntry, interval: ScheduleInterval | 'never') {
-    if (interval === 'never') {
-      removeSchedule(entry.source, 'testnet')
-      setSchedules(prev => ({ ...prev, [entry.id]: null }))
+  function handleScheduleChange(
+    entry: HistoryEntry,
+    interval: ScheduleInterval | "never",
+  ) {
+    if (interval === "never") {
+      removeSchedule(entry.source, "testnet");
+      setSchedules((prev) => ({ ...prev, [entry.id]: null }));
     } else {
-      addSchedule(entry.source, 'testnet', interval)
-      setSchedules(prev => ({ ...prev, [entry.id]: interval }))
+      addSchedule(entry.source, "testnet", interval);
+      setSchedules((prev) => ({ ...prev, [entry.id]: interval }));
     }
   }
 
@@ -119,55 +124,104 @@ export default function HistoryPage() {
       </div>
 
       {entries.length === 0 ? (
-        <p className="text-sm text-slate-500">No scan history yet.</p>
+        <div className="flex flex-col items-center justify-center rounded-xl border border-[#2a2d3a] bg-[#12151f] py-16 px-4 text-center">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-500/10 ring-1 ring-slate-500/30">
+            <svg
+              className="h-8 w-8 text-slate-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <h2 className="mb-2 text-lg font-semibold text-slate-200">
+            No scan history yet
+          </h2>
+          <p className="mb-6 max-w-sm text-sm text-slate-500">
+            Start by scanning your first smart contract to build your security
+            history and track vulnerabilities over time.
+          </p>
+          <a
+            href="/"
+            className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-500"
+          >
+            Run first scan
+          </a>
+        </div>
       ) : (
         <>
           {entries.length >= 7 && (
             <div className="mb-6">
-              <ScanHeatmap entries={entries.map(e => ({ date: e.date }))} />
+              <ScanHeatmap entries={entries.map((e) => ({ date: e.date }))} />
             </div>
           )}
           {entries.length >= 2 && (
             <div className="mb-6">
               <SeverityTrendChart
-                data={entries.map(e => ({
-                  date: new Date(e.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-                  High: e.findings.filter(f => f.severity === 'High').length,
-                  Medium: e.findings.filter(f => f.severity === 'Medium').length,
-                  Low: e.findings.filter(f => f.severity === 'Low').length,
+                data={entries.map((e) => ({
+                  date: new Date(e.date).toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                  }),
+                  High: e.findings.filter((f) => f.severity === "High").length,
+                  Medium: e.findings.filter((f) => f.severity === "Medium")
+                    .length,
+                  Low: e.findings.filter((f) => f.severity === "Low").length,
                 }))}
               />
             </div>
           )}
           <ul className="space-y-3">
-            {entries.map(e => (
+            {entries.map((e) => (
               <li
                 key={e.id}
                 className="rounded-xl border border-[#2a2d3a] bg-[#12151f] px-5 py-4"
               >
                 <div className="flex items-center justify-between">
-                  <span className="truncate font-mono text-sm text-slate-300">{e.source}</span>
+                  <span className="truncate font-mono text-sm text-slate-300">
+                    {e.source}
+                  </span>
                   <span className="ml-4 shrink-0 text-xs text-slate-500">
                     {new Date(e.date).toLocaleDateString()}
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-slate-500">
-                  {e.findings.length} finding{e.findings.length !== 1 ? 's' : ''}
+                  {e.findings.length} finding
+                  {e.findings.length !== 1 ? "s" : ""}
                 </p>
                 {/* Schedule rescan toggle */}
                 <div className="mt-3 flex items-center gap-2">
-                  <svg className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="h-3.5 w-3.5 text-slate-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   <span className="text-xs text-slate-500">Rescan:</span>
-                  {(['never', 'daily', 'weekly'] as const).map(opt => (
+                  {(["never", "daily", "weekly"] as const).map((opt) => (
                     <button
                       key={opt}
                       onClick={() => handleScheduleChange(e, opt)}
                       className={`rounded-md px-2 py-0.5 text-xs font-medium transition ${
-                        (opt === 'never' && !schedules[e.id]) || schedules[e.id] === opt
-                          ? 'bg-indigo-500/20 text-indigo-300'
-                          : 'text-slate-500 hover:text-slate-300'
+                        (opt === "never" && !schedules[e.id]) ||
+                        schedules[e.id] === opt
+                          ? "bg-indigo-500/20 text-indigo-300"
+                          : "text-slate-500 hover:text-slate-300"
                       }`}
                     >
                       {opt.charAt(0).toUpperCase() + opt.slice(1)}

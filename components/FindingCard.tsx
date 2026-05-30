@@ -1,16 +1,16 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import type { Finding } from '@/types/findings'
-import SeverityBadge from './SeverityBadge'
-import CheckTooltip from './CheckTooltip'
-import CodeViewer from './CodeViewer'
-import { loadSourceCode } from '@/lib/codeStore'
-import { mute, unmute, isMuted } from '@/lib/mutedFindings'
+import { useState, useEffect } from "react";
+import type { Finding } from "@/types/findings";
+import SeverityBadge from "./SeverityBadge";
+import CheckTooltip from "./CheckTooltip";
+import CodeViewer from "./CodeViewer";
+import { loadSourceCode } from "@/lib/codeStore";
+import { mute, unmute, isMuted } from "@/lib/mutedFindings";
 
 interface Props {
-  finding: Finding
-  onMuteChange?: () => void
+  finding: Finding;
+  onMuteChange?: () => void;
 }
 
 export default function FindingCard({ finding, onMuteChange }: Props) {
@@ -20,19 +20,19 @@ export default function FindingCard({ finding, onMuteChange }: Props) {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    setSource(loadSourceCode())
-    setMuted(isMuted(finding))
-  }, [finding])
+    setSource(loadSourceCode());
+    setMuted(isMuted(finding));
+  }, [finding]);
 
   function handleMuteToggle() {
     if (muted) {
-      unmute(finding)
-      setMuted(false)
+      unmute(finding);
+      setMuted(false);
     } else {
-      mute(finding)
-      setMuted(true)
+      mute(finding);
+      setMuted(true);
     }
-    onMuteChange?.()
+    onMuteChange?.();
   }
 
   function handleCopy() {
@@ -100,7 +100,9 @@ export default function FindingCard({ finding, onMuteChange }: Props) {
 
       {finding.remediation && (
         <div className="mb-5 rounded-lg border border-green-500/20 bg-green-500/5 px-4 py-3">
-          <p className="mb-1 text-xs font-semibold text-green-400">Remediation</p>
+          <p className="mb-1 text-xs font-semibold text-green-400">
+            Remediation
+          </p>
           <p className="text-sm leading-relaxed text-green-300/90">
             {finding.remediation}
           </p>
@@ -117,23 +119,30 @@ export default function FindingCard({ finding, onMuteChange }: Props) {
         <div className="mt-4">
           <button
             type="button"
-            onClick={() => setShowCode(v => !v)}
+            onClick={() => setShowCode((v) => !v)}
             className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
             aria-expanded={showCode}
+            aria-label={showCode ? "Hide code" : "View code"}
           >
             <svg
-              className={`h-3.5 w-3.5 transition-transform ${showCode ? 'rotate-90' : ''}`}
+              className={`h-3.5 w-3.5 transition-transform ${showCode ? "rotate-90" : ""}`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
               strokeWidth={2}
               aria-hidden="true"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
-            {showCode ? 'Hide code' : 'View in code'}
+            {showCode ? "Hide code" : "View in code"}
           </button>
-          {showCode && <CodeViewer source={source} highlightLine={finding.line} />}
+          {showCode && (
+            <CodeViewer source={source} highlightLine={finding.line} />
+          )}
         </div>
       )}
 
@@ -142,7 +151,7 @@ export default function FindingCard({ finding, onMuteChange }: Props) {
           onClick={handleMuteToggle}
           className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
         >
-          {muted ? 'Unmute this finding' : 'Mute this finding'}
+          {muted ? "Unmute this finding" : "Mute this finding"}
         </button>
         <a
           href={`https://github.com/Veritas-Vaults-Network/soroban-guard-core/issues/new?title=${encodeURIComponent(`False positive: ${finding.check_name}`)}&body=${encodeURIComponent(finding.description)}`}
@@ -154,7 +163,7 @@ export default function FindingCard({ finding, onMuteChange }: Props) {
         </a>
       </div>
     </div>
-  )
+  );
 }
 
 function Detail({
@@ -162,19 +171,19 @@ function Detail({
   value,
   mono,
 }: {
-  label: string
-  value: string
-  mono?: boolean
+  label: string;
+  value: string;
+  mono?: boolean;
 }) {
   return (
     <div className="rounded-md bg-[#1a1d27] px-3 py-2">
       <p className="mb-0.5 text-xs text-slate-500">{label}</p>
       <p
-        className={`truncate text-sm text-slate-200 ${mono ? 'font-mono' : ''}`}
+        className={`truncate text-sm text-slate-200 ${mono ? "font-mono" : ""}`}
         title={value}
       >
         {value}
       </p>
     </div>
-  )
+  );
 }
