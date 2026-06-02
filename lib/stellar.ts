@@ -100,6 +100,20 @@ async function rpcCall<T>(
 }
 
 /**
+ * Fetch the WASM bytecode size (in bytes) for a contract from Soroban RPC.
+ * Returns the byte count, or null if not found.
+ */
+export async function getContractWasmSize(
+  contractId: string,
+  network: StellarNetwork,
+): Promise<number | null> {
+  const wasm = await fetchContractWasm(contractId, network)
+  if (!wasm) return null
+  // wasm is hex-encoded: 2 hex chars = 1 byte
+  return wasm.length / 2
+}
+
+/**
  * Fetch the WASM bytecode for a contract from Soroban RPC.
  * Returns the hex-encoded WASM string, or null if not found.
  */
