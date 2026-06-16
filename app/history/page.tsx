@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Finding } from "@/types/findings";
 import ConfirmModal from "@/components/ConfirmModal";
@@ -70,6 +71,23 @@ export default function HistoryPage() {
       addSchedule(entry.source, "testnet", interval);
       setSchedules((prev) => ({ ...prev, [entry.id]: interval }));
     }
+  }
+
+  function exportHistoryCsv() {
+    const rows = [['Date', 'Source', 'Findings']]
+    for (const e of entries) rows.push([e.date, e.source, String(e.findings.length)])
+    const csv = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = 'scan-history.csv'
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url)
+  }
+
+  function exportHistoryJson() {
+    const blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = 'scan-history.json'
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url)
   }
 
   if (loading) {
@@ -162,12 +180,12 @@ export default function HistoryPage() {
             Start by scanning your first smart contract to build your security
             history and track vulnerabilities over time.
           </p>
-          <a
+          <Link
             href="/"
             className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-500"
           >
             Run first scan
-          </a>
+          </Link>
         </div>
       ) : (
         <>

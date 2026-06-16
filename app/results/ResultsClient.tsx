@@ -52,7 +52,15 @@ export default function ResultsClient() {
   const [navIndex, setNavIndex] = useState<number | null>(null)
   const [showShortcutsModal, setShowShortcutsModal] = useState(false)
   const [contractTxs, setContractTxs] = useState<ContractTransaction[]>([])
-  const hasSource = Boolean(scanSource)
+  const [scanSource, setScanSource] = useState<string | null>(null)
+  const [resultsUrl, setResultsUrl] = useState<string | null>(null)
+  const [duration, setDuration] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+  const [isRescanning, setIsRescanning] = useState(false)
+  const [showActionsMenu, setShowActionsMenu] = useState(false)
+  const [showTelegramModal, setShowTelegramModal] = useState(false)
+  const [showDiscordModal, setShowDiscordModal] = useState(false)
+  const [showSlackModal, setShowSlackModal] = useState(false)
 
   useEffect(() => {
     const storedFindings = sessionStorage.getItem('sg_findings')
@@ -295,9 +303,8 @@ export default function ResultsClient() {
                   className="flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-sm text-emerald-300 transition hover:bg-emerald-500/20"
                 >
                   View attestation on Stellar.expert
-                </a>
-              </div>
-            )}
+                </button>
+              )}
             <a
               href={exportEmail(findings)}
               className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-slate-400 transition hover:text-white"
@@ -339,19 +346,7 @@ export default function ResultsClient() {
                 onClick={() => setShowNotionModal(true)}
                 className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-slate-400 transition hover:text-white"
               >
-                Email summary
-              </a>
-              <button
-                onClick={handleDownloadSarif}
-                className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-slate-400 transition hover:text-white"
-              >
-                Download SARIF
-              </button>
-              <button
-                onClick={handleDownloadPdf}
-                className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-slate-400 transition hover:text-white"
-              >
-                Download PDF
+                Export to Notion
               </button>
             )}
             {findings.length > 0 && (
@@ -379,28 +374,31 @@ export default function ResultsClient() {
               </button>
             )}
             {getEmbedToken() && (
-              <button
-                onClick={handleShareWorkspace}
-                disabled={!canCopy}
-                className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-slate-400 transition hover:text-white disabled:opacity-40"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                </svg>
-                Share workspace
-              </button>
-              {resultsUrl && (
+              <>
                 <button
-                  onClick={handleOpenQrModal}
-                  className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-slate-400 transition hover:text-white"
+                  onClick={handleShareWorkspace}
+                  disabled={!canCopy}
+                  className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-slate-400 transition hover:text-white disabled:opacity-40"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4h5v5H4V4zm11 0h5v5h-5V4zM4 15h5v5H4v-5zm9 0h2m2 0h3m-7 3h3m4-4v6" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                   </svg>
-                  QR code
+                  Share workspace
                 </button>
-              )}
-            </div>
+                {resultsUrl && (
+                  <button
+                    onClick={handleOpenQrModal}
+                    className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-slate-400 transition hover:text-white"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4h5v5H4V4zm11 0h5v5h-5V4zM4 15h5v5H4v-5zm9 0h2m2 0h3m-7 3h3m4-4v6" />
+                    </svg>
+                    QR code
+                  </button>
+                )}
+              </>
+            )}
+          </div>
             {/* Mobile actions dropdown */}
             <div className="relative sm:hidden">
               <button

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import type { Finding, Severity } from '@/types/findings'
 import type { PageSize } from '@/lib/preferences'
@@ -43,6 +43,7 @@ export default function FindingsTable({ findings, searchQuery = '', pageSize = 2
   const [isMobile, setIsMobile] = useState(false)
   const [activeSeverity, setActiveSeverity] = useState<Severity | null>(null)
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'severity', direction: 'asc' })
+  const didScrollToHash = useRef(false)
 
   useEffect(() => {
     if (forceExpandedIndex !== undefined) {

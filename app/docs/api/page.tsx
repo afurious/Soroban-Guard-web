@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'API Reference — Soroban Guard',
@@ -10,12 +11,12 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 export default function ApiDocsPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-      <a href="/" className="mb-8 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-300">
+      <Link href="/" className="mb-8 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-300">
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
         Back to Soroban Guard
-      </a>
+      </Link>
 
       <h1 className="mb-2 text-3xl font-extrabold tracking-tight text-white">API Reference</h1>
       <p className="mb-12 text-slate-400">

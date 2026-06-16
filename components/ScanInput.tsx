@@ -36,6 +36,9 @@ interface Props {
   countdown?: number;
   initialValue?: string;
   initialMode?: InputMode;
+  error?: string | null;
+  isTimeout?: boolean;
+  onRetry?: () => void;
 }
 
 function validateGithub(url: string): { valid: boolean; error?: string } {
@@ -61,6 +64,9 @@ export default function ScanInput({
   countdown = 0,
   initialValue = "",
   initialMode,
+  error,
+  isTimeout,
+  onRetry,
 }: Props) {
   const { t } = useT();
   const [mode, setMode] = useState<InputMode>(() => {
@@ -132,6 +138,7 @@ export default function ScanInput({
       ? (localStorage.getItem(TG_CHAT_ID_KEY) ?? "")
       : "",
   );
+  const [selectedNetwork, setSelectedNetwork] = useState(NETWORKS.testnet);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const normalizedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 

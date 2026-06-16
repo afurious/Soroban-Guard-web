@@ -13,8 +13,7 @@ const mockLocalStorage = (() => {
 })()
 
 beforeAll(() => {
-  Object.defineProperty(global, 'window', { value: global, writable: true })
-  Object.defineProperty(global, 'localStorage', { value: mockLocalStorage, writable: true })
+  Object.defineProperty(global, 'localStorage', { value: mockLocalStorage, writable: true, configurable: true })
 })
 
 beforeEach(() => {

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import type { Finding, Severity } from '@/types/findings'
 import { decodeWorkspace } from '@/lib/share'
@@ -51,12 +52,12 @@ export default function WorkspacePage() {
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-          <a href="/" className="flex items-center gap-2 text-sm text-slate-400 transition hover:text-white">
+          <Link href="/" className="flex items-center gap-2 text-sm text-slate-400 transition hover:text-white">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Soroban Guard
-          </a>
+          </Link>
           <div className="flex items-center gap-3">
             <span className="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-300">
               Shared workspace

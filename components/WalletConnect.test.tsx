@@ -24,7 +24,7 @@ import { useWallet } from '@/lib/WalletContext'
 const mockIsFreighterInstalled = vi.mocked(isFreighterInstalled)
 const mockUseWallet = vi.mocked(useWallet)
 
-const testNetwork = { name: 'Testnet', networkPassphrase: '', horizonUrl: '', sorobanRpcUrl: '' }
+const testNetwork = { name: 'testnet' as const, networkPassphrase: '', horizonUrl: '', sorobanRpcUrl: '' }
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -69,7 +69,7 @@ describe('WalletConnect — connected state', () => {
     mockIsFreighterInstalled.mockReturnValue(true)
     mockUseWallet.mockReturnValue({
       publicKey,
-      network: { name: 'Mainnet', networkPassphrase: '', horizonUrl: '', sorobanRpcUrl: '' },
+      network: { name: 'mainnet' as const, networkPassphrase: '', horizonUrl: '', sorobanRpcUrl: '' },
       disconnect,
       connect: vi.fn(),
     })
@@ -82,7 +82,7 @@ describe('WalletConnect — connected state', () => {
 
   it('displays the network name', () => {
     render(<WalletConnect />)
-    expect(screen.getByText('Mainnet')).toBeInTheDocument()
+    expect(screen.getByText('mainnet')).toBeInTheDocument()
   })
 
   it('renders a Disconnect button', () => {
@@ -109,7 +109,7 @@ describe('WalletConnect — connected state', () => {
       connect: vi.fn(),
     })
     render(<WalletConnect />)
-    expect(screen.queryByText('Mainnet')).not.toBeInTheDocument()
+    expect(screen.queryByText('mainnet')).not.toBeInTheDocument()
   })
 })
 

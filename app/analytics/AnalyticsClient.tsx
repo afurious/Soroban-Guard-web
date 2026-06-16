@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { getAllScanHistory } from '@/lib/history'
 import { computeAnalytics, checkTrend, allCheckNames, type Analytics } from '@/lib/analytics'
 import type { ContractScanRecord } from '@/types/stellar'
@@ -63,12 +64,12 @@ export default function AnalyticsClient() {
               Run at least {MIN_RECORDS} scans to see analytics.{' '}
               {records.length > 0 && `(${records.length} of ${MIN_RECORDS} so far)`}
             </p>
-            <a
+            <Link
               href="/"
               className="mt-6 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500"
             >
               Scan a contract
-            </a>
+            </Link>
           </div>
         ) : (
           <>

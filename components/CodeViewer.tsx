@@ -92,10 +92,8 @@ export default function CodeViewer({ source, highlightLine }: Props) {
                   }`}
                 >
                   {hlReady ? (
-                    // eslint-disable-next-line react/no-danger
                     <code className="hljs" dangerouslySetInnerHTML={{ __html: getHighlightedLine(line) || '&nbsp;' }} />
                   ) : (
-                    // eslint-disable-next-line react/no-danger
                     <code dangerouslySetInnerHTML={{ __html: escapeHtml(line) || '&nbsp;' }} />
                   )}
                 </td>

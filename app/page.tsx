@@ -11,7 +11,7 @@ import ThemeToggle from '@/components/ThemeToggle'
 import ScanQuotaIndicator from '@/components/ScanQuota'
 import { scanContract, ApiError, TimeoutError } from '@/lib/api'
 import type { ScanQuota } from '@/lib/api'
-import { checkNetworkHealth } from '@/lib/stellar'
+import { checkNetworkHealth, fetchContractsByAccount } from '@/lib/stellar'
 import { getScanHistory } from '@/lib/history'
 import { encodeFindings } from '@/lib/share'
 import { useWallet } from '@/lib/WalletContext'
@@ -31,6 +31,9 @@ export default function HomePage() {
   const [scanHistory, setScanHistory] = useState<ContractScanRecord[]>([])
   const [quota, setQuota] = useState<ScanQuota | null>(null)
   const [rateLimitCountdown, setRateLimitCountdown] = useState(0)
+  const [contracts, setContracts] = useState<string[]>([])
+  const [contractsLoading, setContractsLoading] = useState(false)
+  const [contractsError, setContractsError] = useState<string | null>(null)
 
   // Tick down the rate-limit countdown using quota.resetAt
   useEffect(() => {
@@ -116,6 +119,11 @@ export default function HomePage() {
       setLoading(false)
     }
   }
+  return (
+    <div className="flex min-h-screen flex-col">
+      <div
+        role="status"
+        aria-live="polite"
         aria-atomic="true"
         className="sr-only"
       >

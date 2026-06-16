@@ -103,11 +103,11 @@ describe('/api/webhook', () => {
 
   describe('GET handler', () => {
     it('returns 404 for non-existent token', async () => {
-      const req = new NextRequest('http://localhost:3000/api/webhook/nonexistent', {
+      const req = new NextRequest('http://localhost:3000/api/webhook?token=nonexistent', {
         method: 'GET'
       })
 
-      const response = GET(req, { params: { token: 'nonexistent' } })
+      const response = await GET(req)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -126,11 +126,11 @@ describe('/api/webhook', () => {
       const postData = await postResponse.json()
       const token = postData.token
 
-      const getReq = new NextRequest(`http://localhost:3000/api/webhook/${token}`, {
+      const getReq = new NextRequest(`http://localhost:3000/api/webhook?token=${token}`, {
         method: 'GET'
       })
 
-      const getResponse = GET(getReq, { params: { token } })
+      const getResponse = await GET(getReq)
       const getData = await getResponse.json()
 
       expect(getResponse.status).toBe(200)
@@ -154,11 +154,11 @@ describe('/api/webhook', () => {
       const TTL_MS = 60 * 60 * 1000
       vi.spyOn(Date, 'now').mockReturnValue(originalNow() + TTL_MS + 1000)
 
-      const getReq = new NextRequest(`http://localhost:3000/api/webhook/${token}`, {
+      const getReq = new NextRequest(`http://localhost:3000/api/webhook?token=${token}`, {
         method: 'GET'
       })
 
-      const getResponse = GET(getReq, { params: { token } })
+      const getResponse = await GET(getReq)
       const getData = await getResponse.json()
 
       expect(getResponse.status).toBe(404)
@@ -180,10 +180,10 @@ describe('/api/webhook', () => {
       const token = postData.token
 
       // Verify it exists first
-      const getReq1 = new NextRequest(`http://localhost:3000/api/webhook/${token}`, {
+      const getReq1 = new NextRequest(`http://localhost:3000/api/webhook?token=${token}`, {
         method: 'GET'
       })
-      const getResponse1 = GET(getReq1, { params: { token } })
+      const getResponse1 = await GET(getReq1)
       expect(getResponse1.status).toBe(200)
 
       // Advance time to trigger expiry
@@ -192,10 +192,10 @@ describe('/api/webhook', () => {
       vi.spyOn(Date, 'now').mockReturnValue(originalNow() + TTL_MS + 1000)
 
       // Should be evicted and return 404
-      const getReq2 = new NextRequest(`http://localhost:3000/api/webhook/${token}`, {
+      const getReq2 = new NextRequest(`http://localhost:3000/api/webhook?token=${token}`, {
         method: 'GET'
       })
-      const getResponse2 = GET(getReq2, { params: { token } })
+      const getResponse2 = await GET(getReq2)
       const getData2 = await getResponse2.json()
 
       expect(getResponse2.status).toBe(404)

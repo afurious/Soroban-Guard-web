@@ -32,7 +32,7 @@ describe('CLIDocsPage', () => {
   it('contains expected CLI commands in code blocks', () => {
     render(<CLIDocsPage />)
     expect(screen.getByText(/cargo build --release/)).toBeInTheDocument()
-    expect(screen.getByText(/soroban-guard-core/)).toBeInTheDocument()
+    expect(screen.getAllByText(/soroban-guard-core/).length).toBeGreaterThan(0)
     expect(screen.getByText(/curl -X POST/)).toBeInTheDocument()
   })
 })

@@ -14,8 +14,7 @@ const mockLocalStorage = (() => {
 })()
 
 beforeAll(() => {
-  Object.defineProperty(global, 'window', { value: global, writable: true })
-  Object.defineProperty(global, 'localStorage', { value: mockLocalStorage, writable: true })
+  Object.defineProperty(global, 'localStorage', { value: mockLocalStorage, writable: true, configurable: true })
 })
 
 beforeEach(() => {
@@ -93,7 +92,7 @@ describe('truncateLabel', () => {
   })
 
   it('truncates long contractId with start + end', () => {
-    const value = 'A'.repeat(21) + 'B'.repeat(10)
+    const value = 'A'.repeat(35) + 'B'.repeat(10)
     const s = scan('contractId', value)
     const result = truncateLabel(s)
     expect(result).toContain('...')

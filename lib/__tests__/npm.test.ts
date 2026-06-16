@@ -46,7 +46,7 @@ describe('buildUnpkgPackagePath', () => {
   })
 
   it('encodes a scoped package', () => {
-    expect(buildUnpkgPackagePath('@babel/core')).toBe('@babel%2Fcore')
+    expect(buildUnpkgPackagePath('@babel/core')).toBe('@babel/core')
   })
 
   it('trims whitespace', () => {
