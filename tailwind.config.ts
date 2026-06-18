@@ -22,6 +22,15 @@ const config: Config = {
       fontFamily: {
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
+      keyframes: {
+        'step-in': {
+          '0%': { opacity: '0', transform: 'translateY(6px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        'step-in': 'step-in 0.3s ease-out forwards',
+      },
     },
   },
   plugins: [],

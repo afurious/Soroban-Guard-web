@@ -17,6 +17,8 @@ interface Props {
 export default function ScanProgress({ loading, batchCurrent, batchTotal }: Props) {
   const [step, setStep] = useState(-1)
   const [elapsed, setElapsed] = useState(0)
+  // Timestamps (ms since epoch) recorded when each step becomes active
+  const [stepTimes, setStepTimes] = useState<number[]>([])
 
   const isBatch = batchTotal !== undefined && batchTotal > 1
 
@@ -24,17 +26,27 @@ export default function ScanProgress({ loading, batchCurrent, batchTotal }: Prop
     if (!loading) {
       setStep(-1)
       setElapsed(0)
+      setStepTimes([])
       return
     }
+    const start = Date.now()
     setStep(0)
     setElapsed(0)
+    setStepTimes([start])
 
-    // Advance through steps
+    // Advance through steps, recording a timestamp for each
     const timers = STEPS.slice(1).map((_, i) =>
-      setTimeout(() => setStep(i + 1), (i + 1) * 1500),
+      setTimeout(() => {
+        setStep(i + 1)
+        setStepTimes(prev => {
+          const next = [...prev]
+          next[i + 1] = Date.now()
+          return next
+        })
+      }, (i + 1) * 1500),
     )
 
-    // Tick elapsed seconds for the percentage interpolation
+    // Tick elapsed ms for percentage interpolation + live display
     const ticker = setInterval(() => setElapsed(s => s + 100), 100)
 
     return () => {
@@ -78,8 +90,21 @@ export default function ScanProgress({ loading, batchCurrent, batchTotal }: Prop
         {STEPS.map((label, i) => {
           const done = i < step
           const active = i === step
+          // Duration of a completed step in seconds
+          const stepDuration =
+            done && stepTimes[i] != null && stepTimes[i + 1] != null
+              ? ((stepTimes[i + 1] - stepTimes[i]) / 1000).toFixed(1) + 's'
+              : null
+          // Live elapsed for the active step in seconds
+          const liveElapsed =
+            active && stepTimes[i] != null
+              ? ((elapsed - i * 1500) / 1000).toFixed(1) + 's'
+              : null
           return (
-            <div key={label} className="flex flex-1 flex-col items-center gap-1.5">
+            <div
+              key={label}
+              className={`flex flex-1 flex-col items-center gap-1.5 ${active ? 'animate-step-in' : ''}`}
+            >
               <div
                 className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-colors duration-500 ${
                   done
@@ -107,6 +132,12 @@ export default function ScanProgress({ loading, batchCurrent, batchTotal }: Prop
                 }`}
               >
                 {label}
+                {stepDuration && (
+                  <span className="ml-1 text-slate-500">— {stepDuration}</span>
+                )}
+                {liveElapsed && (
+                  <span className="ml-1 text-slate-400">{liveElapsed}</span>
+                )}
               </span>
             </div>
           )
