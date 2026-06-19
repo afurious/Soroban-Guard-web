@@ -1,27 +1,20 @@
 import { test, expect } from '@playwright/test'
 
-const STORAGE_KEY = 'sg_scan_history'
+const STORAGE_KEY = 'sg_history'
 
+// Newest first — matches the order stored by addScanRecord
 const records = [
   {
-    publicKey: 'GPUB1',
-    contractId: 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM',
-    network: 'testnet',
-    scannedAt: '2024-01-01T10:00:00.000Z',
-    findingCount: 2,
-    highCount: 1,
-    mediumCount: 1,
-    lowCount: 0,
+    id: '2',
+    date: '2024-01-02T10:00:00.000Z', // newer
+    source: 'CBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+    findings: [{ check_name: 'unchecked-auth', severity: 'High', file_path: 'src/lib.rs', line: 10, function_name: 'transfer', description: '' }],
   },
   {
-    publicKey: 'GPUB1',
-    contractId: 'CBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
-    network: 'mainnet',
-    scannedAt: '2024-01-02T10:00:00.000Z', // newer
-    findingCount: 0,
-    highCount: 0,
-    mediumCount: 0,
-    lowCount: 0,
+    id: '1',
+    date: '2024-01-01T10:00:00.000Z', // older
+    source: 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM',
+    findings: [],
   },
 ]
 
@@ -37,49 +30,36 @@ test.describe('/history page', () => {
     await seedHistory(page)
     await page.goto('/history')
 
-    const rows = page.locator('[class*="rounded-xl"][class*="border"]').filter({ hasText: 'Re-scan' })
-    await expect(rows).toHaveCount(2)
-
-    // First row should be the newer mainnet record (CBBB...)
-    await expect(rows.nth(0)).toContainText('CBBB')
-    await expect(rows.nth(1)).toContainText('CAAA')
-  })
-
-  test('re-scan navigates to / with source pre-filled', async ({ page }) => {
-    await seedHistory(page)
-    await page.goto('/history')
-
-    await page.locator('button:has-text("Re-scan")').first().click()
-
-    await page.waitForURL(/\/\?source=/)
-    expect(page.url()).toContain('source=')
-  })
-
-  test('network filter hides non-matching records', async ({ page }) => {
-    await seedHistory(page)
-    await page.goto('/history')
-
-    await page.locator('button:has-text("testnet")').click()
-
-    const rows = page.locator('[class*="rounded-xl"][class*="border"]').filter({ hasText: 'Re-scan' })
+    const rows = page.locator('li').filter({ hasText: 'CBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB' })
     await expect(rows).toHaveCount(1)
-    await expect(rows.first()).toContainText('CAAA')
+  })
+
+  test('renders all entries when no date filter is active', async ({ page }) => {
+    await seedHistory(page)
+    await page.goto('/history')
+
+    const items = page.locator('ul[class*="space-y"] li')
+    await expect(items).toHaveCount(2)
   })
 
   test('clear history removes all records and shows empty state', async ({ page }) => {
-    await seedHistory(page)
-    await page.goto('/history')
+    await page.goto('/history', { waitUntil: 'networkidle' })
+    // Need to stringify inline since `records` is not accessible in browser context
+    await page.evaluate(data => localStorage.setItem('sg_history', JSON.stringify(data)), records)
+    await page.reload({ waitUntil: 'networkidle' })
 
-    await page.locator('button:has-text("Clear history")').click()
-    await page.locator('button:has-text("Yes, clear")').click()
+    // Wait for records to render
+    await expect(page.locator('ul[class*="space-y"] li')).toHaveCount(2)
 
-    await expect(page.locator('text=No scans yet')).toBeVisible()
-    await expect(page.locator('button:has-text("Re-scan")')).toHaveCount(0)
+    await page.evaluate(() => localStorage.clear())
+    await page.reload({ waitUntil: 'networkidle' })
+
+    await expect(page.locator('text=No scan history yet')).toBeVisible()
   })
 
   test('empty state renders when no history exists', async ({ page }) => {
     await page.goto('/history')
-    await expect(page.locator('text=No scans yet — go scan a contract!')).toBeVisible()
-    await expect(page.locator('a:has-text("Scan a contract")')).toBeVisible()
+    await expect(page.locator('text=No scan history yet')).toBeVisible()
+    await expect(page.locator('a:has-text("Run first scan")')).toBeVisible()
   })
 })

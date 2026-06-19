@@ -1,4 +1,3 @@
-import { test, expect } from '@playwright/test'
 import { calculateScore } from './score'
 import type { Finding } from '@/types/findings'
 

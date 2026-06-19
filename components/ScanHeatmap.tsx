@@ -1,64 +1,80 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import type { Finding, Severity } from '@/types/findings'
 
 interface Props {
-  entries: { date: string }[]
+  entries: { date: string; findings?: Finding[] }[]
+  selectedDate?: string | null
+  onDayClick?: (date: string | null) => void
 }
 
-function buildWeeks(): Date[][] {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+type DaySeverity = 'none' | Severity
 
-  // Start from 52 weeks ago, aligned to Sunday
-  const start = new Date(today)
-  start.setDate(start.getDate() - 364)
-  // Rewind to the nearest Sunday
-  start.setDate(start.getDate() - start.getDay())
+const SEVERITY_ORDER: Severity[] = ['Critical', 'High', 'Medium', 'Low', 'Info']
 
-  const weeks: Date[][] = []
-  let current = new Date(start)
-
-  while (current <= today) {
-    const week: Date[] = []
-    for (let d = 0; d < 7; d++) {
-      week.push(new Date(current))
-      current.setDate(current.getDate() + 1)
-    }
-    weeks.push(week)
+function highestSeverity(findings: Finding[]): DaySeverity {
+  if (findings.length === 0) return 'none'
+  for (const sev of SEVERITY_ORDER) {
+    if (findings.some(f => f.severity === sev)) return sev
   }
-
-  return weeks
+  return 'Low'
 }
 
-function toKey(date: Date): string {
-  return date.toISOString().slice(0, 10)
+function severityLabel(s: DaySeverity): string {
+  if (s === 'none') return 'no scans'
+  return s
 }
 
-function cellColor(count: number): string {
-  if (count === 0) return 'bg-[#1a1d27] border-[#2a2d3a]'
-  if (count === 1) return 'bg-indigo-900/60 border-indigo-700/40'
-  if (count === 2) return 'bg-indigo-700/70 border-indigo-600/50'
-  return 'bg-indigo-500 border-indigo-400/60'
+const CELL_STYLES: Record<DaySeverity, string> = {
+  none: 'bg-[#1a1d27]',
+  Info: 'bg-slate-500/15 border border-slate-500/30',
+  Low: 'bg-sky-500/15 border border-sky-500/30',
+  Medium: 'bg-amber-500/15 border-2 border-amber-500/30',
+  High: 'bg-red-500/15 border-2 border-dashed border-red-500/30',
+  Critical: 'bg-rose-500/15 border-2 border-rose-500/30 ring-1 ring-inset ring-rose-500/50',
 }
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
-export default function ScanHeatmap({ entries }: Props) {
+export default function ScanHeatmap({ entries, selectedDate, onDayClick }: Props) {
   const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null)
 
-  const countMap = useMemo(() => {
-    const map: Record<string, number> = {}
+  const { daySeverity, dayCounts } = useMemo(() => {
+    const sev: Record<string, DaySeverity> = {}
+    const cnt: Record<string, number> = {}
     for (const e of entries) {
-      const key = new Date(e.date).toISOString().slice(0, 10)
-      map[key] = (map[key] ?? 0) + 1
+      const key = e.date.slice(0, 10)
+      cnt[key] = (cnt[key] ?? 0) + 1
+      const daySev = e.findings ? highestSeverity(e.findings) : 'none'
+      if (!sev[key] || SEVERITY_ORDER.indexOf(daySev as Severity) < SEVERITY_ORDER.indexOf(sev[key] as Severity)) {
+        sev[key] = daySev
+      }
     }
-    return map
+    return { daySeverity: sev, dayCounts: cnt }
   }, [entries])
 
-  const weeks = useMemo(() => buildWeeks(), [])
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
 
-  // Build month labels: find the first week where a new month starts
+  const start = new Date(today)
+  start.setDate(start.getDate() - 364)
+  start.setDate(start.getDate() - start.getDay())
+
+  const weeks: Date[][] = useMemo(() => {
+    const w: Date[][] = []
+    let current = new Date(start)
+    while (current <= today) {
+      const week: Date[] = []
+      for (let d = 0; d < 7; d++) {
+        week.push(new Date(current))
+        current.setDate(current.getDate() + 1)
+      }
+      w.push(week)
+    }
+    return w
+  }, [])
+
   const monthLabels = useMemo(() => {
     const labels: { label: string; col: number }[] = []
     let lastMonth = -1
@@ -72,11 +88,13 @@ export default function ScanHeatmap({ entries }: Props) {
     return labels
   }, [weeks])
 
+  const todayStr = today.toISOString().slice(0, 10)
+
   return (
     <div className="rounded-xl border border-[#2a2d3a] bg-[#12151f] p-5">
       <h2 className="mb-4 text-sm font-semibold text-slate-300">Scan activity — last 52 weeks</h2>
 
-      {/* Month labels */}
+      {/* Month labels row */}
       <div className="relative mb-1 flex" style={{ paddingLeft: '1.5rem' }}>
         {monthLabels.map(({ label, col }) => (
           <span
@@ -89,45 +107,73 @@ export default function ScanHeatmap({ entries }: Props) {
         ))}
       </div>
 
-      <div className="flex gap-[2px]" style={{ paddingLeft: '1.5rem' }}>
-        {/* Day-of-week labels */}
-        <div className="absolute flex flex-col gap-[2px]" style={{ marginLeft: '-1.5rem' }}>
-          {['S','M','T','W','T','F','S'].map((d, i) => (
-            <span key={i} className="flex h-[12px] items-center text-[9px] text-slate-600">{i % 2 === 1 ? d : ''}</span>
+      <div className="flex gap-[2px]">
+        {/* Day-of-week labels — separate column so they don't scroll away */}
+        <div className="flex shrink-0 flex-col gap-[2px]" style={{ width: '1.5rem' }}>
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+            <span
+              key={i}
+              className="flex h-[14px] items-center justify-end pr-1 text-[9px] text-slate-600"
+            >
+              {i % 2 === 1 ? d : ''}
+            </span>
           ))}
         </div>
 
-        {/* Grid */}
-        {weeks.map((week, wi) => (
-          <div key={wi} className="flex flex-col gap-[2px]">
-            {week.map((day, di) => {
-              const key = toKey(day)
-              const count = countMap[key] ?? 0
-              const isFuture = day > new Date()
-              const label = `${count} scan${count !== 1 ? 's' : ''} on ${day.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`
+        {/* Scrollable grid */}
+        <div className="overflow-x-auto">
+          <div className="flex gap-[2px]">
+            {weeks.map((week, wi) => (
+              <div key={wi} className="flex flex-col gap-[2px]">
+                {week.map((day) => {
+                  const key = day.toISOString().slice(0, 10)
+                  const count = dayCounts[key] ?? 0
+                  const sev = daySeverity[key] ?? 'none'
+                  const isFuture = day > new Date()
+                  const isSelected = selectedDate === key
+                  const label = `${count} scan${count !== 1 ? 's' : ''}, ${severityLabel(sev)} on ${day.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`
 
-              return (
-                <div
-                  key={di}
-                  className={`h-[12px] w-[12px] rounded-[2px] border cursor-default transition-opacity ${isFuture ? 'opacity-0 pointer-events-none' : cellColor(count)}`}
-                  onMouseEnter={e => {
-                    const rect = (e.target as HTMLElement).getBoundingClientRect()
-                    setTooltip({ text: label, x: rect.left + rect.width / 2, y: rect.top })
-                  }}
-                  onMouseLeave={() => setTooltip(null)}
-                  aria-label={label}
-                />
-              )
-            })}
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        if (isFuture || !onDayClick) return
+                        onDayClick(isSelected ? null : key)
+                      }}
+                      disabled={isFuture}
+                      className={`h-[14px] w-[14px] rounded-[2px] transition-colors ${
+                        isSelected ? 'ring-2 ring-white/60' : ''
+                      } ${
+                        isFuture
+                          ? 'cursor-default opacity-0 pointer-events-none'
+                          : onDayClick
+                            ? 'cursor-pointer hover:opacity-80'
+                            : 'cursor-default'
+                      } ${CELL_STYLES[sev]}`}
+                      onMouseEnter={e => {
+                        const rect = (e.target as HTMLElement).getBoundingClientRect()
+                        setTooltip({ text: label, x: rect.left + rect.width / 2, y: rect.top })
+                      }}
+                      onMouseLeave={() => setTooltip(null)}
+                      aria-label={label}
+                      title={label}
+                    />
+                  )
+                })}
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
 
       {/* Legend */}
       <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-500">
         <span>Less</span>
-        {[0, 1, 2, 3].map(n => (
-          <div key={n} className={`h-[12px] w-[12px] rounded-[2px] border ${cellColor(n)}`} />
+        {(['none', 'Info', 'Low', 'Medium', 'High', 'Critical'] as DaySeverity[]).map(s => (
+          <div key={s} className="flex items-center gap-1">
+            <span className={`inline-block h-3 w-3 rounded-[2px] ${CELL_STYLES[s]}`} />
+            <span>{s === 'none' ? 'None' : s}</span>
+          </div>
         ))}
         <span>More</span>
       </div>

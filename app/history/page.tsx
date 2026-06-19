@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Finding } from "@/types/findings";
@@ -36,10 +36,16 @@ export default function HistoryPage() {
   const [entries, setEntries] = useState<HistoryEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
   // Track schedule state per entry id
   const [schedules, setSchedules] = useState<
     Record<string, ScheduleInterval | null>
   >({});
+
+  const filteredEntries = useMemo(() => {
+    if (!selectedDate) return entries
+    return entries.filter(e => e.date.slice(0, 10) === selectedDate)
+  }, [entries, selectedDate])
 
   useEffect(() => {
     const loaded = loadHistory();
@@ -191,7 +197,11 @@ export default function HistoryPage() {
         <>
           {entries.length >= 7 && (
             <div className="mb-6">
-              <ScanHeatmap entries={entries.map((e) => ({ date: e.date }))} />
+              <ScanHeatmap
+                entries={entries}
+                selectedDate={selectedDate}
+                onDayClick={setSelectedDate}
+              />
             </div>
           )}
           {entries.length >= 2 && (
@@ -210,8 +220,20 @@ export default function HistoryPage() {
               />
             </div>
           )}
+          {selectedDate && (
+            <p className="mb-3 text-sm text-slate-400">
+              Showing scans for <span className="font-medium text-white">{new Date(selectedDate + 'T00:00:00').toLocaleDateString()}</span>
+              {' '}
+              <button
+                onClick={() => setSelectedDate(null)}
+                className="ml-2 text-indigo-400 underline transition hover:text-indigo-300"
+              >
+                Clear filter
+              </button>
+            </p>
+          )}
           <ul className="space-y-3">
-            {entries.map((e) => (
+            {filteredEntries.map((e) => (
               <li
                 key={e.id}
                 className="rounded-xl border border-[#2a2d3a] bg-[#12151f] px-5 py-4"

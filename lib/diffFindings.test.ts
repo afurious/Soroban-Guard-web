@@ -1,4 +1,3 @@
-import { test, expect } from '@playwright/test'
 import { diffFindings } from './diffFindings'
 import type { Finding } from '@/types/findings'
 

@@ -9,11 +9,7 @@ jest.mock('@/lib/sampleContract', () => ({ SAMPLE_CONTRACT: '// sample' }))
 jest.mock('@/lib/ipfs', () => ({ isValidCid: jest.fn(), fetchFromIpfs: jest.fn() }))
 jest.mock('@/lib/npm', () => ({ isValidNpmPackage: jest.fn(), fetchNpmSource: jest.fn() }))
 jest.mock('@/lib/notifications', () => ({ requestPermission: jest.fn() }))
-jest.mock('@/lib/stellar', () => ({
-  extractContractIdFromUrl: jest.fn(() => null),
-  getContractWasmSize: jest.fn(() => Promise.resolve(null)),
-  isValidContractId: jest.fn((id: string) => id.length === 56 && id.startsWith('C')),
-}))
+jest.mock('@/lib/stellar', () => ({ extractContractIdFromUrl: jest.fn(() => null), getContractWasmSize: jest.fn().mockResolvedValue(null) }))
 jest.mock('@/lib/gist', () => ({ isValidGistUrl: jest.fn(), fetchGistFiles: jest.fn(), fetchGistFileContent: jest.fn() }))
 
 const noop = jest.fn()

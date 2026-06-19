@@ -14,12 +14,6 @@ export default defineConfig({
 
   projects: [
     {
-      name: 'unit',
-      testDir: './lib',
-      testMatch: '**/*.test.ts',
-      use: {},
-    },
-    {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },

@@ -74,8 +74,8 @@ test.describe('/analytics page', () => {
     await page.goto('/analytics')
 
     await expect(page.locator('text=Top 5 most frequent checks')).toBeVisible()
-    await expect(page.locator('text=unchecked-auth')).toBeVisible()
-    await expect(page.locator('text=integer-overflow')).toBeVisible()
+    await expect(page.locator('text=unchecked-auth').first()).toBeVisible()
+    await expect(page.locator('text=integer-overflow').first()).toBeVisible()
   })
 
   test('shows empty state when fewer than 3 scans', async ({ page }) => {
@@ -102,7 +102,7 @@ test.describe('/analytics page', () => {
     await page.goto('/analytics')
 
     await expect(page.locator('text=Findings severity trend by check')).toBeVisible()
-    await expect(page.locator('aria-label=Select check name')).toBeVisible()
+    await expect(page.locator('[aria-label="Select check name"]')).toBeVisible()
   })
 
   test('back link navigates to /history', async ({ page }) => {

@@ -112,10 +112,10 @@ test.describe('/compare page', () => {
     await expect(persistingSection.locator('text=integer-overflow')).toBeVisible()
   })
 
-  test('redirects to / when IDs are missing', async ({ page }) => {
+  test('shows empty state when IDs are missing', async ({ page }) => {
     await page.goto('/compare')
-    await page.waitForURL('/')
-    await expect(page).toHaveURL('/')
+    await expect(page.locator('text=No scans selected for comparison')).toBeVisible()
+    await expect(page.locator('text=Browse scan history')).toBeVisible()
   })
 
   test('back button navigates to home', async ({ page }) => {
